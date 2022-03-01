@@ -22,6 +22,8 @@
 // this will run if EXAMPLE_AES is defined in the Makefile (see line 54)
 #ifdef EXAMPLE_AES
 #include "aes.h"
+#include "bearssl_hash.h"
+#include "inner.h"
 #endif
 
 
@@ -310,6 +312,8 @@ int main(void) {
     // -------------------------------------------------------------------------
     // end example
     // -------------------------------------------------------------------------
+    br_sha1_context context;
+    br_sha1_init(&context);
 #endif
 
     // Initialize IO components

@@ -1,3 +1,6 @@
 [submodule "bootloader/lib/tiny-AES-c"]
 	path = bootloader/lib/tiny-AES-c
 	url = https://github.com/kokke/tiny-AES-c.git
+[submodule "bootloader/lib/bearssl"]
+	path = bootloader/lib/bearssl
+	url = https://www.bearssl.org/git/BearSSL

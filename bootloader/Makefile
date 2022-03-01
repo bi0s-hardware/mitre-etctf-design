@@ -44,10 +44,14 @@ all: ${COMPILER}/bootloader.axf
 # example AES rules to build in tiny-AES-c: https://github.com/kokke/tiny-AES-c
 # make sure submodule has been pulled (run `git submodule update --init`)
 # uncomment next line to activate
-# EXAMPLE_AES=foo
+EXAMPLE_AES=foo
 ifdef EXAMPLE_AES
 # path to crypto library
 CRYPTOPATH=${ROOT}/lib/tiny-AES-c
+CRYPTOPATH+=${ROOT}/lib/bearssl/src
+CRYPTOPATH+=${ROOT}/lib/bearssl/src/hash
+CRYPTOPATH+=${ROOT}/lib/bearssl/src/codec
+CRYPTOPATH+=${ROOT}/lib/bearssl/inc
 
 # add path to crypto source files to source path
 VPATH+=${CRYPTOPATH}
@@ -56,13 +60,13 @@ VPATH+=${CRYPTOPATH}
 IPATH+=${CRYPTOPATH}
 
 # add crypto object file to includes path
-# LDFLAGS+=${COMPILER}/aes.o
+# LDFLAGS+=${COMPILER}/aes.o ${COMPILER}/sha1.o
 
 # add compiler flag to enable example AES code 
 CFLAGS+=-DEXAMPLE_AES
 
 # add rule to build crypto library
-${COMPILER}/bootloader.axf: ${COMPILER}/aes.o
+${COMPILER}/bootloader.axf: ${COMPILER}/aes.o ${COMPILER}/sha1.o
 endif
 ################ end crypto example ################
 
