@@ -66,7 +66,7 @@ IPATH+=${CRYPTOPATH}
 CFLAGS+=-DEXAMPLE_AES
 
 # add rule to build crypto library
-${COMPILER}/bootloader.axf: ${COMPILER}/aes.o ${COMPILER}/sha1.o
+${COMPILER}/bootloader.axf: ${COMPILER}/aes.o ${COMPILER}/sha1.o ${COMPILER}/dec32be.o ${COMPILER}/enc32be.o
 endif
 ################ end crypto example ################
 
