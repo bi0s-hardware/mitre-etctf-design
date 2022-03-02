@@ -23,6 +23,7 @@
 #ifdef EXAMPLE_AES
 #include "aes.h"
 #include "bearssl_hash.h"
+#include "bearssl_rsa.h"
 #include "inner.h"
 #endif
 
