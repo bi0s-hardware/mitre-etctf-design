@@ -12,6 +12,7 @@
 # Use this code at your own risk!
 
 import argparse
+import hashlib
 import json
 import logging
 from pathlib import Path
@@ -49,11 +50,14 @@ def update_firmware(socket_number: int, firmware_file: Path):
         while sock.recv(1) != b"U":
             pass
 
+        sha256hash = hashlib.sha256(firmware.encode())
+
         # Send the version, size, and release message
         log.info("Sending version, size, and release message...")
         payload = (
             struct.pack(">HI", version_num, firmware_size)
             + release_msg.encode()
+            + sha256.encode()
             + b"\x00"
         )
         sock.send(payload)

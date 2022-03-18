@@ -40,6 +40,7 @@
  *      Size:    0x0002FC00 : 0x0003000 (1KB = 4B + pad)
  *      Cfg:     0x00030000 : 0x0004000 (64KB)
  */
+#define FIRMWARE_HASH_PTR          ((uint32_t)(FLASH_START  + 0x0002B3B0))
 #define FIRMWARE_METADATA_PTR      ((uint32_t)(FLASH_START + 0x0002B400))
 #define FIRMWARE_SIZE_PTR          ((uint32_t)(FIRMWARE_METADATA_PTR + 0))
 #define FIRMWARE_VERSION_PTR       ((uint32_t)(FIRMWARE_METADATA_PTR + 4))
@@ -183,6 +184,8 @@ void handle_update(void)
     uint32_t size = 0;
     uint32_t rel_msg_size = 0;
     uint8_t rel_msg[1025]; // 1024 + terminator
+    uint8_t sha256_hash[65]; // 64 + terminator
+    uint8_t sha256_size = 0;
 
     // Acknowledge the host
     uart_writeb(HOST_UART, 'U');
@@ -200,6 +203,9 @@ void handle_update(void)
     // Receive release message
     rel_msg_size = uart_readline(HOST_UART, rel_msg) + 1; // Include terminator
 
+    // Recieve SHA 256 hash
+    sha256_size = uart_readline(HOST_UART, sha256_hash) + 1; // Include terminator
+
     // Check the version
     current_version = *((uint32_t *)FIRMWARE_VERSION_PTR);
     if (current_version == 0xFFFFFFFF) {
@@ -211,6 +217,9 @@ void handle_update(void)
         uart_writeb(HOST_UART, FRAME_BAD);
         return;
     }
+
+    sha256_hash = *((uint32_t *)FIRMWARE_HASH_PTR);
+    flash_write_word(sha256_hash, FIRMWARE_HASH_PTR, 64);
 
     // Clear firmware metadata
     flash_erase_page(FIRMWARE_METADATA_PTR);
