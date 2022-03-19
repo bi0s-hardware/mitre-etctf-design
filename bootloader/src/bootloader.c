@@ -24,6 +24,7 @@
 #include "aes.h"
 #include "bearssl_hash.h"
 #include "bearssl_rsa.h"
+#include "bearssl_block.h"
 #include "inner.h"
 #endif
 
@@ -61,6 +62,8 @@
 // Firmware update constants
 #define FRAME_OK 0x00
 #define FRAME_BAD 0x01
+
+static unsigned char aes_key[16];
 
 
 /**
@@ -173,6 +176,86 @@ void load_data(uint32_t interface, uint32_t dst, uint32_t size)
     }
 }
 
+static void compute_sha256(const void *data, int len, void *out)
+{
+    br_sha256_context csha256;
+
+    br_sha256_init(&csha256);
+    br_sha256_update(&csha256, data, len);
+    br_sha256_out(&csha256, out);
+
+    return;
+}
+
+static void do_AES_decrypt(char *enc_data, int len,
+    const br_block_cbcenc_class *ve,
+    const br_block_cbcdec_class *vd)
+{
+    static unsigned char key[32];
+    static unsigned char iv[16];
+    size_t key_len;
+    br_aes_gen_cbcdec_keys v_dc;
+    const br_block_cbcdec_class **dc;
+
+    if (ve->block_size != 16 || vd->block_size != 16
+            || ve->log_block_size != 4 || vd->log_block_size != 4)
+    {
+        return;
+    }
+
+    dc = &v_dc.vtable;
+    key_len = sizeof(aes_key);
+    memcpy(key, aes_key, sizeof(aes_key));
+#if 1
+    vd->init(dc, key, key_len);
+    memset(iv, 0, sizeof iv);
+    vd->run(dc, iv, enc_data, len);
+#endif
+}
+
+int decrypt_firmware(unsigned char *image, unsigned int totalsize)
+{
+    unsigned int image_size = 0;
+    static unsigned char hash[32];
+    static unsigned char decrypted_hash[32];
+    int i = 0;
+
+    if (NULL == image)
+    {
+        return -1;
+    }
+
+    /* Get the actual size of the software image
+    // memcpy(&image_size, &image[IMAGESIZE_OFFSET], IMAGESIZE);
+    //g_ui32ImageSize = image_size;
+
+    // Decrypt the encrypted AES key & store it
+    if (!br_rsa_i15_private((unsigned char *)&image[AES_KEY_OFFSET], &RSA_SK)) {
+        ERROR( "RSA decryption of AES key failed (1)\r");
+        return 1;
+    }
+    memcpy(aes_key, &image[AES_KEY_OFFSET], sizeof(aes_key));
+     
+
+
+    if (!br_rsa_i15_pkcs1_vrfy((unsigned char *)&image[SHA256_OFFSET], SHA256_SIZE, BR_HASH_OID_SHA256, \
+                sizeof (decrypted_hash), &RSA_PK, decrypted_hash))
+    {
+        ERROR("Signature verification failed (2)\r");
+        return -1;
+    }
+    */
+    // Decrypt the application with the AES key 
+   do_AES_decrypt((char *)&image[FIRMWARE_BOOT_PTR], image_size,
+        &br_aes_big_cbcenc_vtable,
+        &br_aes_big_cbcdec_vtable);
+
+    // Perform SHA256 sum check on the app binary
+    compute_sha256(&image[FIRMWARE_BOOT_PTR], image_size, hash);
+
+    return 0;
+}
+
 /**
  * @brief Update the firmware.
  */
@@ -186,6 +269,7 @@ void handle_update(void)
     uint8_t rel_msg[1025]; // 1024 + terminator
     uint8_t sha256_hash[65]; // 64 + terminator
     uint8_t sha256_size = 0;
+    uint8_t ret = 0;
 
     // Acknowledge the host
     uart_writeb(HOST_UART, 'U');
@@ -217,9 +301,6 @@ void handle_update(void)
         uart_writeb(HOST_UART, FRAME_BAD);
         return;
     }
-
-    sha256_hash = *((uint32_t *)FIRMWARE_HASH_PTR);
-    flash_write_word(sha256_hash, FIRMWARE_HASH_PTR, 64);
 
     // Clear firmware metadata
     flash_erase_page(FIRMWARE_METADATA_PTR);
@@ -263,6 +344,8 @@ void handle_update(void)
     
     // Retrieve firmware
     load_data(HOST_UART, FIRMWARE_STORAGE_PTR, size);
+
+    ret = decrypt_firmware(FIRMWARE_BOOT_PTR, FIRMWARE_SIZE_PTR);
 }
 
 

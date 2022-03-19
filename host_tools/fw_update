@@ -57,7 +57,7 @@ def update_firmware(socket_number: int, firmware_file: Path):
         payload = (
             struct.pack(">HI", version_num, firmware_size)
             + release_msg.encode()
-            + sha256.encode()
+            + sha256.hexdigest().encode()
             + b"\x00"
         )
         sock.send(payload)
