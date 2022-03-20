@@ -73,7 +73,7 @@ ${COMPILER}/bootloader.axf: ${COMPILER}/dec32be.o ${COMPILER}/enc32be.o
 ${COMPILER}/bootloader.axf: ${COMPILER}/sha2small.o ${COMPILER}/aes_big_cbcdec.o 
 ${COMPILER}/bootloader.axf: ${COMPILER}/aes_big_dec.o ${COMPILER}/aes_common.o
 ${COMPILER}/bootloader.axf: ${COMPILER}/names.o ${COMPILER}/aes_big_cbcenc.o
-${COMPILER}/bootloader.axf:	${COMPILER}/aes_big_enc.o
+${COMPILER}/bootloader.axf: ${COMPILER}/aes_big_enc.o
 endif#  ${COMPILER}/aes_big_cbcdec.o
 ################ end crypto example ################
 
