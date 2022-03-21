@@ -42,7 +42,8 @@
  *      Size:    0x0002FC00 : 0x0003000 (1KB = 4B + pad)
  *      Cfg:     0x00030000 : 0x0004000 (64KB)
  */
-#define FIRMWARE_HASH_PTR          ((uint32_t)(FLASH_START  + 0x0002B3B0))
+#define FIRMWARE_AES_PTR           ((uint32_t)(FLASH_START + 0x0002B370))
+#define FIRMWARE_HASH_PTR          ((uint32_t)(FLASH_START + 0x0002B3B0))
 #define FIRMWARE_METADATA_PTR      ((uint32_t)(FLASH_START + 0x0002B400))
 #define FIRMWARE_SIZE_PTR          ((uint32_t)(FIRMWARE_METADATA_PTR + 0))
 #define FIRMWARE_VERSION_PTR       ((uint32_t)(FIRMWARE_METADATA_PTR + 4))
@@ -226,9 +227,9 @@ int decrypt_firmware(unsigned char *image, unsigned int totalsize)
         return -1;
     }
 
-    /* Get the actual size of the software image
-    // memcpy(&image_size, &image[IMAGESIZE_OFFSET], IMAGESIZE);
-    //g_ui32ImageSize = image_size;
+    // Get the actual size of the software image
+    memcpy(&image_size, &image[IMAGESIZE_OFFSET], 4);
+    /*g_ui32ImageSize = image_size;
 
     // Decrypt the encrypted AES key & store it
     if (!br_rsa_i15_private((unsigned char *)&image[AES_KEY_OFFSET], &RSA_SK)) {
@@ -247,13 +248,14 @@ int decrypt_firmware(unsigned char *image, unsigned int totalsize)
     }
     */
     // Decrypt the application with the AES key 
-   do_AES_decrypt((char *)&image[FIRMWARE_BOOT_PTR], image_size,
+   do_AES_decrypt((char *)&image[FIRMWARE_STORAGE_PTR], image_size,
         &br_aes_big_cbcenc_vtable,
         &br_aes_big_cbcdec_vtable);
 
     // Perform SHA256 sum check on the app binary
-    compute_sha256(&image[FIRMWARE_BOOT_PTR], image_size, hash);
+    compute_sha256(&image[FIRMWARE_STORAGE_PTR], image_size, hash);
 
+    // check if hash== FIRMWARE_HASH_PTR
     return 0;
 }
 
