@@ -43,7 +43,7 @@
  *      Cfg:     0x00030000 : 0x0004000 (64KB)
  */
 #define FIRMWARE_AES_PTR           ((uint32_t)(FLASH_START + 0x0002B370))
-#define FIRMWARE_HASH_PTR          ((uint32_t)(FLASH_START + 0x0002B3B0))
+#define FIRMWARE_HASH_PTR          ((unsigned char)(FLASH_START + 0x0002B3B0))
 #define FIRMWARE_METADATA_PTR      ((uint32_t)(FLASH_START + 0x0002B400))
 #define FIRMWARE_SIZE_PTR          ((uint32_t)(FIRMWARE_METADATA_PTR + 0))
 #define FIRMWARE_VERSION_PTR       ((uint32_t)(FIRMWARE_METADATA_PTR + 4))
@@ -256,6 +256,11 @@ int decrypt_firmware(unsigned char *image, unsigned int totalsize)
     compute_sha256(&image[FIRMWARE_STORAGE_PTR], image_size, hash);
 
     // check if hash== FIRMWARE_HASH_PTR
+    for(i=0;i<32;i++){
+        if(hash[i] != FIRMWARE_HASH_PTR[i]){
+            //not matched
+        }
+    }
     return 0;
 }
 
