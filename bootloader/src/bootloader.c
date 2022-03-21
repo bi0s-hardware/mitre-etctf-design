@@ -43,7 +43,7 @@
  *      Cfg:     0x00030000 : 0x0004000 (64KB)
  */
 #define FIRMWARE_AES_PTR           ((uint32_t)(FLASH_START + 0x0002B370))
-#define FIRMWARE_HASH_PTR          ((unsigned char)(FLASH_START + 0x0002B3B0))
+#define FIRMWARE_HASH_PTR          ((unsigned char *)(FLASH_START + 0x0002B3B0))
 #define FIRMWARE_METADATA_PTR      ((uint32_t)(FLASH_START + 0x0002B400))
 #define FIRMWARE_SIZE_PTR          ((uint32_t)(FIRMWARE_METADATA_PTR + 0))
 #define FIRMWARE_VERSION_PTR       ((uint32_t)(FIRMWARE_METADATA_PTR + 4))
@@ -228,7 +228,7 @@ int decrypt_firmware(unsigned char *image, unsigned int totalsize)
     }
 
     // Get the actual size of the software image
-    memcpy(&image_size, &image[IMAGESIZE_OFFSET], 4);
+    memcpy(&image_size, &image[FIRMWARE_SIZE_PTR], 4);
     /*g_ui32ImageSize = image_size;
 
     // Decrypt the encrypted AES key & store it
