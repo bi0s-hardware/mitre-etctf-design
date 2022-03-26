@@ -65,12 +65,23 @@ def update_firmware(socket_number: int, firmware_file: Path):
         if response != RESP_OK:
             exit(f"ERROR: Bootloader responded with {repr(response)}")
 
+        key = b'\x1a\x2a\x3a\x4a\x5a\x6a\x7a\x8a\x1a\x2a\x3a\x4a\x5a\x6a\x7a\x8a'
+        encrypted_firmware = encrypt(firmware)
+
         # Send packets
         log.info("Sending firmware packets...")
-        send_packets(sock, firmware)
+        send_packets(sock, encrypted_firmware)
 
         log.info("Firmware updated\n")
 
+def pad(s):
+    return s + b"\0" * (AES.block_size - len(s) % AES.block_size)
+
+def encrypt(message, key, key_size=256):
+    message = pad(message)
+    iv = Random.get_random_bytes(16)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    return iv + cipher.encrypt(message)
 
 def main():
     # get arguments

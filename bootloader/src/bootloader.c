@@ -65,7 +65,10 @@
 #define FRAME_OK 0x00
 #define FRAME_BAD 0x01
 
-static unsigned char aes_key[16];
+static unsigned char aes_key[16] = {
+    0x1a, 0x2a, 0x3a, 0x4a, 0x5a, 0x6a, 0x7a, 0x8a,
+    0x1a, 0x2a, 0x3a, 0x4a, 0x5a, 0x6a, 0x7a, 0x8a
+};
 
 
 /**
@@ -193,7 +196,7 @@ static void do_AES_decrypt(char *enc_data, int len,
     const br_block_cbcenc_class *ve,
     const br_block_cbcdec_class *vd)
 {
-    static unsigned char key[32];
+    static unsigned char key[32]; //16
     static unsigned char iv[16];
     size_t key_len;
     br_aes_gen_cbcdec_keys v_dc;
@@ -214,6 +217,12 @@ static void do_AES_decrypt(char *enc_data, int len,
     vd->run(dc, iv, enc_data, len);
 #endif
 }
+
+/**
+ * @brief Decrypt firmware
+ * 
+ * @return : 0 on success, -1 on failure.
+ */
 
 int decrypt_firmware(unsigned char *image, unsigned int totalsize)
 {
@@ -252,13 +261,13 @@ int decrypt_firmware(unsigned char *image, unsigned int totalsize)
         &br_aes_big_cbcenc_vtable,
         &br_aes_big_cbcdec_vtable);
 
-    // Perform SHA256 sum check on the app binary
+    // Perform SHA256 sum check and store the result on `hash`
     compute_sha256(&image[FIRMWARE_STORAGE_PTR], image_size, hash);
 
     // check if hash== FIRMWARE_HASH_PTR
-    for(i=0;i<32;i++){
-        if(hash[i] != FIRMWARE_HASH_PTR[i]){
-            //not matched
+    for(i=0; i<32; i++){
+        if (hash[i] != FIRMWARE_HASH_PTR[i]){
+            return -1;
         }
     }
     return 0;
