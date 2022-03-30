@@ -49,7 +49,7 @@
 #define FIRMWARE_VERSION_PTR       ((uint32_t)(FIRMWARE_METADATA_PTR + 4))
 #define FIRMWARE_RELEASE_MSG_PTR   ((uint32_t)(FIRMWARE_METADATA_PTR + 8))
 #define FIRMWARE_RELEASE_MSG_PTR2  ((uint32_t)(FIRMWARE_METADATA_PTR + FLASH_PAGE_SIZE))
-
+#define FIRMWARE_DATA_PTR          ((unsigned char)(FIRMWARE_METADATA_PTR + (FLASH_PAGE_SIZE*2)))
 #define FIRMWARE_STORAGE_PTR       ((uint32_t)(FIRMWARE_METADATA_PTR + (FLASH_PAGE_SIZE*2)))
 #define FIRMWARE_BOOT_PTR          ((uint32_t)0x20004000)
 
@@ -257,12 +257,12 @@ int decrypt_firmware(unsigned char *image, unsigned int totalsize)
     }
     */
     // Decrypt the application with the AES key 
-   do_AES_decrypt((char *)&image[FIRMWARE_STORAGE_PTR], image_size,
+   do_AES_decrypt(FIRMWARE_DATA_PTR  , image_size,
         &br_aes_big_cbcenc_vtable,
         &br_aes_big_cbcdec_vtable);
 
     // Perform SHA256 sum check and store the result on `hash`
-    compute_sha256(&image[FIRMWARE_STORAGE_PTR], image_size, hash);
+    compute_sha256(FIRMWARE_DATA_PTR, image_size, hash);
 
     // check if hash== FIRMWARE_HASH_PTR
     for(i=0; i<32; i++){
